@@ -39,8 +39,59 @@ This project is a FastAPI-based API for processing geographic points. The main f
 5. **Logs**  
 	- All logs from the API and custom logger are shown in the container or local console.
 
-6. **Documentation**  
-	- Interactive API docs are available at [http://localhost:8000/docs](http://localhost:8000/docs).
+
+---
+
+## Running Backend and Frontend with Docker Compose
+
+This project uses Docker Compose to orchestrate three services:
+
+- **geo-processor**: Python FastAPI backend (port 8000)
+- **nest-api**: NestJS API proxy (port 3001)
+- **next-frontend**: Next.js frontend (port 3000)
+
+### Steps to Run Everything Locally
+
+1. Make sure Docker and Docker Compose are installed.
+2. From the project root, build and start all services:
+
+		```bash
+		docker-compose up --build
+		```
+
+		> **Note:** The Dockerfiles for NestJS and Next.js now include a build step (`npm run build`) before starting the production server. This ensures all compiled files are present.
+
+3. Access the services:
+		- FastAPI docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+		- NestJS API: [http://localhost:3001](http://localhost:3001)
+		- Next.js frontend: [http://localhost:3000](http://localhost:3000)
+
+### Local Development (without Docker)
+
+For development, use the dev commands in each service folder:
+
+- **NestJS:**
+	```bash
+	npm run start:dev
+	```
+- **Next.js:**
+	```bash
+	npm run dev
+	```
+
+### How Connections Work
+
+- The Next.js frontend sends requests to the NestJS API (`http://localhost:3001`).
+- The NestJS API validates, caches, and forwards requests to the FastAPI backend (`http://localhost:8000`).
+- Results are returned and visualized in the frontend.
+
+### Stopping the Services
+
+To stop all containers:
+
+```bash
+docker-compose down
+```
 
 ---
 ```

@@ -1,0 +1,39 @@
+# Docker Compose for FastAPI, NestJS, and Next.js
+
+version: '3.8'
+
+services:
+  geo-processor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: geo-processor
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  nest-api:
+    build:
+      context: ./nest-api
+      dockerfile: Dockerfile
+    container_name: nest-api
+    ports:
+      - "3001:3001"
+    environment:
+      - GEO_PROCESSOR_URL=http://geo-processor:8000
+    depends_on:
+      - geo-processor
+    restart: unless-stopped
+
+  next-frontend:
+    build:
+      context: ./next-frontend
+      dockerfile: Dockerfile
+    container_name: next-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEST_API_URL=http://nest-api:3001
+    depends_on:
+      - nest-api
+    restart: unless-stopped
