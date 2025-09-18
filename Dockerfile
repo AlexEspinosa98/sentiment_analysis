@@ -6,7 +6,7 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./geo-processor/app ./app
+COPY ./geo_processor/app ./app
 COPY ./common ./common
 
 # Expose port for FastAPI
