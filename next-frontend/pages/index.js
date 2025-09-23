@@ -1,12 +1,24 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
-const ResultMap = dynamic(() => import('../components/ResultMap'), { ssr: false });
+import 'leaflet/dist/leaflet.css';
+const MapComponent = dynamic(() => import('../components/MapComponent'), { ssr: false });
 
 export default function Home() {
   const [jsonInput, setJsonInput] = useState('[{"lat":40.7128,"lng":-74.0060},{"lat":34.0522,"lng":-118.2437}]');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showMap, setShowMap] = useState(false);
+
+  const dummyData = {
+    centroid: { lat: 37.7749, lng: -122.4194 },
+    bounds: {
+      north: 37.8324, 
+      south: 37.7033, 
+      east: -122.3537, 
+      west: -122.5145
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,13 +40,21 @@ export default function Home() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Error processing request');
-      setResult(data);
+      setResult({ ...data, points });
+      setShowMap(true); // Show map automatically after a successful result
     } catch (err) {
       setError(err.message);
+      setShowMap(false);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleShowMap = () => {
+    setShowMap(!showMap);
+  };
+
+  const mapData = result ? result : dummyData;
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg,#e0eafc,#cfdef3)', fontFamily: 'Segoe UI,Arial,sans-serif' }}>
@@ -62,20 +82,31 @@ export default function Home() {
           </button>
         </form>
         {error && <p style={{ color: 'red', marginTop: '1rem', textAlign: 'center' }}>{error}</p>}
-        {result && (
-          <section style={{ marginTop: '2rem', textAlign: 'center' }}>
-            <h3 style={{ color: '#222' }}>Result</h3>
-            <div style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>
-              <strong>Centroid:</strong> {result.centroid ? `${result.centroid.lat}, ${result.centroid.lng}` : 'N/A'}
+        
+        <section style={{ marginTop: '2rem', textAlign: 'center' }}>
+          {result && (
+            <div>
+              <h3 style={{ color: '#222' }}>Result</h3>
+              <div style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>
+                <strong>Centroid:</strong> {result.centroid ? `${result.centroid.lat}, ${result.centroid.lng}` : 'N/A'}
+              </div>
+              <div style={{ fontSize: '1.1rem' }}>
+                <strong>Bounds:</strong> {result.bounds ? JSON.stringify(result.bounds) : 'N/A'}
+              </div>
             </div>
-            <div style={{ fontSize: '1.1rem' }}>
-              <strong>Bounds:</strong> {result.bounds ? JSON.stringify(result.bounds) : 'N/A'}
-            </div>
-            {result.centroid && result.bounds && (
-              <ResultMap centroid={result.centroid} bounds={result.bounds} />
-            )}
-          </section>
-        )}
+          )}
+          <button
+            type="button"
+            style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem 1rem', fontSize: '1rem', cursor: 'pointer', margin: '1rem 0' }}
+            onClick={handleShowMap}
+          >
+            {showMap ? 'Hide Map' : 'Show Map'}
+          </button>
+          {showMap && mapData.centroid && mapData.bounds && (
+            <MapComponent centroid={mapData.centroid} bounds={mapData.bounds} />
+          )}
+        </section>
+
       </main>
       <footer style={{ background: '#222', color: '#fff', textAlign: 'center', padding: '1rem 0', fontSize: '1rem', letterSpacing: '1px', marginTop: 'auto' }}>
         &copy; {new Date().getFullYear()} Alexander Espinosa &mdash; Python Developer<br />
